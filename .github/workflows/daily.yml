@@ -2,9 +2,8 @@ name: Soft Exam Daily Quiz
 
 on:
   schedule:
-    # 每天北京时间早上 17:00 (UTC 1:00)
     - cron: '0 1 * * *'
-  workflow_dispatch: # 允许手动点击按钮测试
+  workflow_dispatch:
 
 jobs:
   daily-job:
@@ -19,7 +18,8 @@ jobs:
           python-version: '3.10'
 
       - name: Install libs
-        run: pip install -U google-generativeai requests
+        # 我们只安装 requests 即可，它非常稳定
+        run: pip install requests
 
       - name: Run Script
         env:
