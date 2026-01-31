@@ -1,0 +1,28 @@
+name: Soft Exam Daily Quiz
+
+on:
+  schedule:
+    # 每天北京时间早上 17:00 (UTC 1:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch: # 允许手动点击按钮测试
+
+jobs:
+  daily-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install libs
+        run: pip install google-generativeai requests
+
+      - name: Run Script
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+        run: python daily_quiz.py
