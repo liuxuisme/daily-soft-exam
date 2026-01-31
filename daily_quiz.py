@@ -38,7 +38,7 @@ def get_ai_quiz():
 
     # --- 1. 智能选择模型 ---
     # 优先尝试 v1 版本的 flash，如果失败会自动回退
-    target_model = "models/gemini-1.5-flash"
+    target_model = "models/gemini-2.5-flash"
     
     # 这里的 v1 是关键，之前报错是因为用了 v1beta
     url = f"https://generativelanguage.googleapis.com/v1/{target_model}:generateContent?key={api_key}"
