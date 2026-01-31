@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>软考每日一练</title>
+    <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f0f2f5;padding:20px;display:flex;justify-content:center;min-height:100vh}
+        .container{background:#fff;width:100%;max-width:600px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:24px;height:fit-content}
+        .tag{display:inline-block;background:#e6f7ff;color:#1890ff;font-size:12px;padding:4px 8px;border-radius:4px;margin-bottom:16px;font-weight:600}
+        .question{font-size:18px;font-weight:600;color:#333;margin-bottom:24px;line-height:1.6}
+        .option{padding:16px;border:1px solid #e8e8e8;border-radius:8px;margin-bottom:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center}
+        .option:hover{background:#fafafa;border-color:#d9d9d9}
+        .option.selected{border-color:#1890ff;background:#e6f7ff}
+        .option.correct{border-color:#52c41a;background:#f6ffed}
+        .option.wrong{border-color:#ff4d4f;background:#fff1f0}
+        .btn{width:100%;padding:14px;background:#1890ff;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;margin-top:12px;cursor:pointer}
+        .analysis{margin-top:24px;padding:20px;background:#f9f9f9;border-radius:8px;border-left:4px solid #1890ff;display:none}
+        .analysis h4{margin:0 0 8px 0;color:#333}
+        .analysis p{margin:0;color:#666;line-height:1.6;font-size:14px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tag">软考每日一练</div>
+        <div id="question" class="question">正在加载题目...</div>
+        <div id="options"></div>
+        <button id="submitBtn" class="btn" onclick="checkAnswer()">提交答案</button>
+        <div id="analysis" class="analysis">
+            <h4>💡 解析</h4>
+            <p id="analysisText"></p>
+        </div>
+    </div>
+    <script>
+        let quizData = null;
+        let selectedIdx = -1;
+
+        // 初始化：从 URL 获取题目数据
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const dataStr = params.get('data');
+            if(dataStr) {
+                try {
+                    // 解码 Base64 -> JSON
+                    quizData = JSON.parse(decodeURIComponent(escape(atob(dataStr))));
+                    renderQuiz();
+                } catch(e) { document.getElementById('question').innerText = "题目解析错误"; }
+            } else {
+                document.getElementById('question').innerText = "无效的题目链接";
+            }
+        };
+
+        function renderQuiz() {
+            document.getElementById('question').innerText = quizData.question;
+            const optsDiv = document.getElementById('options');
+            quizData.options.forEach((opt, idx) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerText = opt;
+                div.onclick = () => selectOption(idx, div);
+                optsDiv.appendChild(div);
+            });
+        }
+
+        function selectOption(idx, el) {
+            if(document.getElementById('analysis').style.display === 'block') return;
+            selectedIdx = idx;
+            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function checkAnswer() {
+            if(selectedIdx === -1) return alert('请先选择一个选项');
+            const opts = document.querySelectorAll('.option');
+            const correctLetter = quizData.answer.trim().toUpperCase(); // 例如 "B"
+            const map = ['A','B','C','D'];
+            const correctIdx = map.indexOf(correctLetter);
+
+            if(selectedIdx === correctIdx) {
+                opts[selectedIdx].classList.add('correct');
+            } else {
+                opts[selectedIdx].classList.add('wrong');
+                opts[correctIdx].classList.add('correct');
+            }
+            
+            document.getElementById('analysisText').innerText = quizData.analysis;
+            document.getElementById('analysis').style.display = 'block';
+            document.getElementById('submitBtn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
