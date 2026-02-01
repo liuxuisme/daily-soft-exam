@@ -110,7 +110,7 @@ def send_dingtalk(quiz):
             "title": "软考每日一练", 
             "text": f"### 📅 软考每日打卡\n\n**{quiz['question']}**\n\n{chr(10).join(quiz['options'])}\n\n---",
             "btnOrientation": "0", 
-            "btns": [{"title": "✏️ 开始答题 & 看解析", "actionURL": "https://liuxuisme.github.io/daily-soft-exam/"}]
+            "btns": [{"title": "✏️ 开始答题 & 看解析", "actionURL": "http://edge.xh.alipay.net:8083/"}]
         }
     }
     
