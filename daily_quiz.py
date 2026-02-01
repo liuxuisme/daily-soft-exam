@@ -97,20 +97,33 @@ def send_dingtalk(quiz):
     webhook = os.environ.get("DINGTALK_WEBHOOK")
     if not webhook or not quiz: return
 
+    # 1. 生成加密参数
     json_str = json.dumps(quiz, ensure_ascii=False)
     b64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
     url_param = urllib.parse.quote(b64_data)
+    
+    # 2. 拼接完整跳转链接
     full_url = f"{WEB_PAGE_URL}/index.html?data={url_param}"
-
     print(f"🔗 生成链接: {full_url}")
 
+    # 3. 改用标准 Markdown 消息
+    # 优势：链接直接显示在文本里，如果钉钉拦截，可以长按复制链接去浏览器打开
     data = {
-        "msgtype": "actionCard",
-        "actionCard": {
-            "title": "软考每日一练", 
-            "text": f"### 📅 软考每日打卡\n\n**{quiz['question']}**\n\n{chr(10).join(quiz['options'])}\n\n---",
-            "btnOrientation": "0", 
-            "btns": [{"title": "✏️ 开始答题 & 看解析", "actionURL": "http://edge.xh.alipay.net:8083/"}]
+        "msgtype": "markdown",
+        "markdown": {
+            "title": "软考每日一练",
+            "text": f"""### 📅 软考每日打卡
+
+**{quiz['question']}**
+
+{chr(10).join(quiz['options'])}
+
+---
+👇 **点击下方链接答题 & 看解析**
+[👉 开始答题 & 查看答案]({full_url})
+
+*(⚠️ 如果钉钉提示无法打开，请长按上方链接“复制”，在手机浏览器中打开)*
+"""
         }
     }
     
