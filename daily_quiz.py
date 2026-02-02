@@ -46,7 +46,7 @@ def get_ai_content(topic):
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key: return None
 
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
     
     # 📝 优化 Prompt：明确禁止 LaTeX 单反斜杠，防止 JSON 炸裂
     prompt_text = f"""
