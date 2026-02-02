@@ -1,15 +1,20 @@
-name: Soft Exam Daily Quiz
+name: Soft Exam Daily System v2
 
 on:
   schedule:
-    - cron: '0 1 * * *'
+    # 每天北京时间早上 8:30 (UTC 0:30)
+    - cron: '30 0 * * *'
   workflow_dispatch:
+
+# ⚠️ 必须加上这个权限设置，脚本才能提交代码！
+permissions:
+  contents: write
 
 jobs:
   daily-job:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -17,12 +22,22 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install libs
-        # 我们只安装 requests 即可，它非常稳定
+      - name: Install Dependencies
         run: pip install requests
 
-      - name: Run Script
+      - name: Generate Content & Save File
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
         run: python daily_quiz.py
+
+      # 新增步骤：把生成的 docs/data/xxx.json 提交回仓库
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          # 添加新生成的文件
+          git add docs/data/*.json
+          # 如果有变化才提交，防止报错
+          git commit -m "📅 Auto-add daily quiz data [skip ci]" || echo "No changes to commit"
+          git push
