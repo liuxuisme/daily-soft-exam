@@ -130,29 +130,44 @@ def send_dingtalk(date_str, data):
     full_url = f"{WEB_PAGE_URL}/index.html?date={date_str}"
     print(f"🔗 生成链接: {full_url}")
 
-    text = f"""### 🏛️ 架构师备考：{data['topic']}
+    # --- 1. 计算倒计时 (目标：当年5月24日) ---
+    today = datetime.datetime.now()
+    current_year = today.year
+    exam_date = datetime.datetime(current_year, 5, 24)
+    
+    # 计算天数差
+    delta = exam_date - today
+    days_left = delta.days + 1 # +1 包含今天
+    
+    # 如果已经过了考试日期（比如现在是6月），显示0或明年的倒计时
+    if days_left < 0: days_left = 0
 
-**🔥 今日任务清单：**
-1. 🧠 **核心精讲**：原理 + 记忆口诀
-2. 📝 **论文/案例**：写作与解题技巧
-3. ⚔️ **真题实战**：{len(data['questions'])} 道高频真题
+    # --- 2. 构建纯净版文案 ---
+    # 这里的 title 是通知栏（弹窗）显示的标题
+    msg_title = f"距离软考还有 {days_left} 天"
+
+    # Markdown 正文
+    # 我们保留了 {data['topic']}，否则你只看倒计时不知道今天学啥
+    text = f"""### ⏳ {msg_title}
+
+**今日特训：{data['topic']}**
+
+**今日任务：**
+1. 学习核心知识点
+2. 完成 10 道精选真题
 
 ---
-👇 **点击开始深度学习**
-[👉 进入特训系统]({full_url})
-
-*(链接若无法打开，请复制到浏览器访问)*
+👇 点击开始今日学习打开 [👉 开始今日特训]({full_url})
 """
+    
     payload = {
         "msgtype": "markdown",
-        "markdown": { "title": f"架构师特训：{data['topic']}", "text": text }
+        "markdown": { 
+            "title": msg_title, 
+            "text": text 
+        }
     }
     requests.post(webhook, json=payload)
-
-if __name__ == "__main__":
-    topic = get_today_topic()
-    data = get_ai_content(topic)
-    if data:
         date_str = save_to_file(data)
         send_dingtalk(date_str, data)
     else:
