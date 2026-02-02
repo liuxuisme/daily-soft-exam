@@ -76,7 +76,7 @@ def get_ai_content(topic):
             }}
         ]
     }}
-    请生成 10 道题。
+    请生成 5 道题。
     """
     
     payload = { "contents": [{ "parts": [{"text": prompt_text}] }] }
