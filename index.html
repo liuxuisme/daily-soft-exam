@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系统架构师每日特训</title>
+    <!-- 引入 Markdown 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root { --primary: #722ed1; --sec: #f9f0ff; --bg: #f4f5f7; --text: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); line-height: 1.6; }
@@ -22,22 +24,37 @@
         .tab.active { background: #fff; color: var(--primary); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         /* 卡片通用样式 */
-        .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); overflow-x: auto; /* 防止表格撑破手机屏幕 */ }
         .card-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; }
         .card-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--primary); margin-right: 8px; border-radius: 2px; }
         
-        /* Markdown 内容样式 */
+        /* =========================================
+           Markdown 内容美化样式 (核心修复部分)
+           ========================================= */
         .md-content { font-size: 15px; color: #444; }
-        .md-content b { color: #000; background: rgba(114, 46, 209, 0.1); padding: 0 4px; border-radius: 2px; }
-        .md-content h3, .md-content h4 { margin: 10px 0 5px; color: #333; font-size: 15px; }
-        .md-content ul { padding-left: 20px; margin: 5px 0; }
-        .md-content li { margin-bottom: 5px; }
+        
+        /* 1. 表格样式 */
+        .md-content table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }
+        .md-content th, .md-content td { border: 1px solid #e8e8e8; padding: 8px 12px; text-align: left; }
+        .md-content th { background-color: #fafafa; font-weight: bold; color: #333; }
+        .md-content tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        /* 2. 列表样式 */
+        .md-content ul, .md-content ol { padding-left: 20px; margin: 10px 0; }
+        .md-content li { margin-bottom: 6px; }
+        
+        /* 3. 强调与引用 */
+        .md-content strong { color: #000; background: rgba(114, 46, 209, 0.08); padding: 0 4px; border-radius: 2px; }
+        .md-content blockquote { border-left: 4px solid var(--primary); margin: 10px 0; padding: 10px 15px; background: #f9f9f9; color: #666; }
+        .md-content h3, .md-content h4 { margin-top: 20px; margin-bottom: 10px; color: #222; font-size: 16px; }
+        .md-content code { background: #f0f0f0; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #d63384; }
 
         /* 重点精讲卡片 */
         .deep-dive { border: 1px solid #e0c8ff; background: #fdfaff; }
         
         /* 论文指导卡片 */
-        .essay-box { background: #fffbe6; border: 1px solid #ffe58f; color: #876800; font-size: 14px; padding: 15px; border-radius: 8px; }
+        .essay-box { background: #fffbe6; border: 1px solid #ffe58f; }
+        /* 这里的文字也要用 Markdown 渲染，所以沿用 md-content 样式 */
 
         /* 题目样式 */
         .quiz-wrapper { display: none; }
@@ -68,19 +85,19 @@
 
 <div class="header">
     <div>
-        <h1>架构师每日特训 <span class="badge">V2.1</span></h1>
+        <h1>架构师每日特训 <span class="badge">V2.2</span></h1>
         <div class="date-tag" id="date-display">...</div>
     </div>
 </div>
 
 <div class="container">
-    <div id="loading">🚀 正在加载高频考点与真题...</div>
+    <div id="loading">🚀 正在加载高频考点与真题,请稍等一分钟...</div>
 
     <div id="app" style="display:none">
         <!-- 顶部切换 -->
         <div class="tabs">
-            <div class="tab active" onclick="switchTab(0)">📚 深度学习</div>
-            <div class="tab" onclick="switchTab(1)">⚔️ 真题实战 (10)</div>
+            <div class="tab active" onclick="switchTab(0)">每日学习</div>
+            <div class="tab" onclick="switchTab(1)">真题实战 (10)</div>
         </div>
 
         <!-- Tab 1: 学习内容 -->
@@ -91,16 +108,16 @@
                 <div class="md-content" id="core-concept"></div>
             </div>
 
-            <!-- 2. 深度精讲与记忆 (新增) -->
+            <!-- 2. 深度精讲与记忆 -->
             <div class="card deep-dive">
-                <div class="card-title">核心知识点讲解</div>
+                <div class="card-title">核心知识点</div>
                 <div class="md-content" id="knowledge-exp"></div>
             </div>
 
             <!-- 3. 论文与案例指导 -->
             <div class="card">
                 <div class="card-title">📝 论文/案例指导</div>
-                <div class="essay-box" id="essay-guide"></div>
+                <div class="md-content essay-box" id="essay-guide"></div>
             </div>
             
             <div style="height: 20px;"></div>
@@ -124,16 +141,6 @@
 <script>
     let rawData = null;
     let currIdx = 0;
-    const TOTAL_Q = 10; // 设定题目数
-
-    // Markdown 简单解析
-    const renderMD = (text) => {
-        if (!text) return "";
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // 加粗
-            .replace(/^#+\s+(.*$)/gm, '<h4>$1</h4>') // 标题
-            .replace(/\n/g, '<br>'); // 换行
-    };
 
     window.onload = async () => {
         const params = new URLSearchParams(window.location.search);
@@ -145,7 +152,6 @@
         }
 
         try {
-            // 加时间戳避免缓存
             const res = await fetch(`./docs/data/${dateStr}.json?t=${Date.now()}`);
             if(!res.ok) throw new Error("Data not found");
             rawData = await res.json();
@@ -161,10 +167,11 @@
         document.getElementById('app').style.display = 'block';
         document.getElementById('date-display').innerText = `${date} | ${rawData.topic}`;
 
-        // 渲染学习内容
-        document.getElementById('core-concept').innerHTML = renderMD(rawData.core_concept);
-        document.getElementById('knowledge-exp').innerHTML = renderMD(rawData.knowledge_explanation);
-        document.getElementById('essay-guide').innerHTML = renderMD(rawData.essay_guide);
+        // 使用 marked.parse 进行渲染 (这是核心修改)
+        // marked.parse 会把 Markdown 文本变成 <table>, <ul>, <b> 等 HTML 标签
+        document.getElementById('core-concept').innerHTML = marked.parse(rawData.core_concept || "");
+        document.getElementById('knowledge-exp').innerHTML = marked.parse(rawData.knowledge_explanation || "");
+        document.getElementById('essay-guide').innerHTML = marked.parse(rawData.essay_guide || "");
 
         // 渲染题目
         const list = document.getElementById('quiz-list');
@@ -183,7 +190,7 @@
                 <div>${optionsHtml}</div>
                 <div class="analysis-panel" id="analysis-${idx}">
                     <strong>✅ 参考答案：${q.answer}</strong><br><br>
-                    ${renderMD(q.analysis)}
+                    <div class="md-content">${marked.parse(q.analysis || "")}</div>
                 </div>
             `;
             list.appendChild(el);
@@ -201,7 +208,7 @@
     }
 
     window.checkAnswer = function(qIdx, oIdx, userVal, el) {
-        if(el.parentElement.querySelector('.selected')) return; // 只有一次机会
+        if(el.parentElement.querySelector('.selected')) return; 
         
         const q = rawData.questions[qIdx];
         const correctVal = q.answer.trim().toUpperCase();
@@ -211,7 +218,6 @@
             el.classList.add('correct');
         } else {
             el.classList.add('wrong');
-            // 显示正确项
             const correctIndex = ['A','B','C','D'].indexOf(correctVal);
             if(correctIndex >= 0) el.parentElement.children[correctIndex].classList.add('correct');
         }
