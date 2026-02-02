@@ -3,90 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>软考每日一练</title>
+    <title>软考每日特训</title>
     <style>
-        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f0f2f5;padding:20px;display:flex;justify-content:center;min-height:100vh}
-        .container{background:#fff;width:100%;max-width:600px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:24px;height:fit-content}
-        .tag{display:inline-block;background:#e6f7ff;color:#1890ff;font-size:12px;padding:4px 8px;border-radius:4px;margin-bottom:16px;font-weight:600}
-        .question{font-size:18px;font-weight:600;color:#333;margin-bottom:24px;line-height:1.6}
-        .option{padding:16px;border:1px solid #e8e8e8;border-radius:8px;margin-bottom:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center}
-        .option:hover{background:#fafafa;border-color:#d9d9d9}
-        .option.selected{border-color:#1890ff;background:#e6f7ff}
-        .option.correct{border-color:#52c41a;background:#f6ffed}
-        .option.wrong{border-color:#ff4d4f;background:#fff1f0}
-        .btn{width:100%;padding:14px;background:#1890ff;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;margin-top:12px;cursor:pointer}
-        .analysis{margin-top:24px;padding:20px;background:#f9f9f9;border-radius:8px;border-left:4px solid #1890ff;display:none}
-        .analysis h4{margin:0 0 8px 0;color:#333}
-        .analysis p{margin:0;color:#666;line-height:1.6;font-size:14px}
+        :root { --primary: #1677ff; --bg: #f5f5f5; --white: #fff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; padding-bottom: 80px; }
+        .header { background: var(--white); padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .header h1 { margin: 0; font-size: 18px; color: #333; }
+        .header p { margin: 5px 0 0; font-size: 12px; color: #666; }
+        
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        
+        /* 选项卡切换 */
+        .tabs { display: flex; background: #fff; padding: 5px; border-radius: 8px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; font-size: 14px; border-radius: 6px; cursor: pointer; color: #666; }
+        .tab.active { background: var(--primary); color: #fff; font-weight: bold; }
+
+        /* 内容区域 */
+        .content-box { display: none; }
+        .content-box.active { display: block; }
+
+        /* 知识点样式 */
+        .study-card { background: #fff; padding: 20px; border-radius: 12px; line-height: 1.8; color: #333; font-size: 15px; white-space: pre-wrap; }
+        .study-card h3 { color: var(--primary); margin-top: 0; }
+
+        /* 题目样式 */
+        .quiz-card { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: none; }
+        .quiz-card.active { display: block; }
+        .q-title { font-weight: bold; font-size: 16px; margin-bottom: 20px; }
+        .option { padding: 12px 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; }
+        .option .letter { font-weight: bold; margin-right: 10px; color: var(--primary); }
+        .option.selected { background: #e6f7ff; border-color: var(--primary); }
+        .option.correct { background: #f6ffed; border-color: #52c41a; }
+        .option.wrong { background: #fff1f0; border-color: #ff4d4f; }
+        
+        /* 底部控制栏 */
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; }
+        .btn { padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-outline { background: #f0f0f0; color: #333; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        
+        .analysis-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 14px; display: none; border-left: 4px solid var(--primary); }
+        
+        #loading { text-align: center; padding: 50px; color: #999; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="tag">软考每日一练</div>
-        <div id="question" class="question">正在加载题目...</div>
-        <div id="options"></div>
-        <button id="submitBtn" class="btn" onclick="checkAnswer()">提交答案</button>
-        <div id="analysis" class="analysis">
-            <h4>💡 解析</h4>
-            <p id="analysisText"></p>
+
+<div class="header">
+    <h1 id="page-title">📅 软考每日特训</h1>
+    <p id="page-date">加载中...</p>
+</div>
+
+<div class="container">
+    <div id="loading">正在获取今日考题...</div>
+
+    <div id="main-app" style="display:none">
+        <!-- 顶部 Tab -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('study')">📖 知识晨读</div>
+            <div class="tab" onclick="switchTab('quiz')">✍️ 实战刷题</div>
+        </div>
+
+        <!-- 知识点模块 -->
+        <div id="study-box" class="content-box active">
+            <div class="study-card" id="knowledge-content"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="switchTab('quiz')">看完啦，去刷题 ➔</button>
+            </div>
+        </div>
+
+        <!-- 刷题模块 -->
+        <div id="quiz-box" class="content-box">
+            <div id="quiz-container"></div>
+            <!-- 题目会在 JS 里生成 -->
         </div>
     </div>
-    <script>
-        let quizData = null;
-        let selectedIdx = -1;
+</div>
 
-        // 初始化：从 URL 获取题目数据
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            const dataStr = params.get('data');
-            if(dataStr) {
-                try {
-                    // 解码 Base64 -> JSON
-                    quizData = JSON.parse(decodeURIComponent(escape(atob(dataStr))));
-                    renderQuiz();
-                } catch(e) { document.getElementById('question').innerText = "题目解析错误"; }
-            } else {
-                document.getElementById('question').innerText = "无效的题目链接";
-            }
-        };
+<!-- 底部导航 (仅在刷题模式显示) -->
+<div class="footer-bar" id="footer-bar" style="display:none">
+    <button class="btn btn-outline" onclick="prevQ()">上一题</button>
+    <span id="q-index">1 / 10</span>
+    <button class="btn btn-primary" id="next-btn" onclick="nextQ()">下一题</button>
+</div>
 
-        function renderQuiz() {
-            document.getElementById('question').innerText = quizData.question;
-            const optsDiv = document.getElementById('options');
-            quizData.options.forEach((opt, idx) => {
-                const div = document.createElement('div');
-                div.className = 'option';
-                div.innerText = opt;
-                div.onclick = () => selectOption(idx, div);
-                optsDiv.appendChild(div);
-            });
+<script>
+    let currentData = null;
+    let currentQIdx = 0;
+    let userAnswers = {}; // 记录用户答案
+
+    // 1. 初始化：获取 URL 中的日期，去 fetch 对应的 JSON 文件
+    window.onload = async function() {
+        const params = new URLSearchParams(window.location.search);
+        // 如果 URL 没有 date 参数，默认找 data/today.json (或者你可以让 Python 生成带日期的文件名)
+        // 这里我们约定：Python 会把每天的数据存为 docs/data/YYYY-MM-DD.json
+        const dateStr = params.get('date'); 
+        
+        if(!dateStr) {
+            document.getElementById('loading').innerText = "❌ 链接无效，缺少日期参数";
+            return;
         }
 
-        function selectOption(idx, el) {
-            if(document.getElementById('analysis').style.display === 'block') return;
-            selectedIdx = idx;
-            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
+        try {
+            // 加个时间戳防止缓存
+            const res = await fetch(`./docs/data/${dateStr}.json?t=${new Date().getTime()}`);
+            if(!res.ok) throw new Error("文件不存在");
+            currentData = await res.json();
+            initApp(dateStr);
+        } catch(e) {
+            document.getElementById('loading').innerText = "❌ 未找到今日题库，请稍后再试或检查日期";
+            console.error(e);
         }
+    };
 
-        function checkAnswer() {
-            if(selectedIdx === -1) return alert('请先选择一个选项');
-            const opts = document.querySelectorAll('.option');
-            const correctLetter = quizData.answer.trim().toUpperCase(); // 例如 "B"
-            const map = ['A','B','C','D'];
-            const correctIdx = map.indexOf(correctLetter);
+    function initApp(date) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        
+        document.getElementById('page-title').innerText = `📅 ${currentData.topic}`;
+        document.getElementById('page-date').innerText = date;
+        
+        // 渲染知识点 (简单的 Markdown 处理：把 ** 加粗，换行处理)
+        let kText = currentData.knowledge_point || "今日无知识点";
+        kText = kText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); // 加粗
+        document.getElementById('knowledge-content').innerHTML = kText;
 
-            if(selectedIdx === correctIdx) {
-                opts[selectedIdx].classList.add('correct');
-            } else {
-                opts[selectedIdx].classList.add('wrong');
-                opts[correctIdx].classList.add('correct');
-            }
+        // 渲染题目
+        const qContainer = document.getElementById('quiz-container');
+        currentData.questions.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.className = `quiz-card ${idx === 0 ? 'active' : ''}`;
+            card.id = `q-card-${idx}`;
             
-            document.getElementById('analysisText').innerText = quizData.analysis;
-            document.getElementById('analysis').style.display = 'block';
-            document.getElementById('submitBtn').style.display = 'none';
+            let optionsHtml = '';
+            q.options.forEach((opt, oIdx) => {
+                // 提取选项字母，如 "A. xxx" -> "A"
+                // 假设选项格式是 "A. 文本"
+                const letter = opt.substring(0, 1); 
+                optionsHtml += `
+                    <div class="option" onclick="checkAnswer(${idx}, ${oIdx}, '${letter}', this)">
+                        <span class="letter">${letter}</span>
+                        <span>${opt.substring(2)}</span>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="q-title">${idx + 1}. ${q.question}</div>
+                <div class="options-list">${optionsHtml}</div>
+                <div class="analysis-box" id="analysis-${idx}">
+                    <strong>✅ 参考答案：${q.answer}</strong><br><br>
+                    ${q.analysis}
+                </div>
+            `;
+            qContainer.appendChild(card);
+        });
+    }
+
+    // 切换 Tab
+    window.switchTab = function(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content-box').forEach(b => b.classList.remove('active'));
+        
+        if(type === 'study') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('study-box').classList.add('active');
+            document.getElementById('footer-bar').style.display = 'none';
+        } else {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('quiz-box').classList.add('active');
+            document.getElementById('footer-bar').style.display = 'flex';
         }
-    </script>
+    }
+
+    // 答题逻辑
+    window.checkAnswer = function(qIdx, oIdx, choice, el) {
+        if(userAnswers[qIdx] !== undefined) return; // 已答过不可改
+        
+        userAnswers[qIdx] = choice;
+        const correct = currentData.questions[qIdx].answer.trim().toUpperCase();
+        
+        if(choice === correct) {
+            el.classList.add('correct');
+        } else {
+            el.classList.add('wrong');
+            // 自动把正确的标绿
+            const options = el.parentElement.children;
+            const correctIdx = ['A','B','C','D'].indexOf(correct);
+            if(correctIdx >= 0 && options[correctIdx]) options[correctIdx].classList.add('correct');
+        }
+        
+        // 显示解析
+        document.getElementById(`analysis-${qIdx}`).style.display = 'block';
+    }
+
+    // 翻页逻辑
+    window.nextQ = function() {
+        if(currentQIdx < currentData.questions.length - 1) {
+            document.getElementById(`q-card-${currentQIdx}`).classList.remove('active');
+            currentQIdx++;
+            document.getElementById(`q-card-${currentQIdx}`).classList.add('active');
+            updateFooter();
+        } else {
+            alert("已经是最后一题啦！");
+        }
+    }
+
+    window.prevQ = function() {
+        if(currentQIdx > 0) {
+            document.getElementById(`q-card-${currentQIdx}`).classList.remove('active');
+            currentQIdx--;
+            document.getElementById(`q-card-${currentQIdx}`).classList.add('active');
+            updateFooter();
+        }
+    }
+
+    function updateFooter() {
+        document.getElementById('q-index').innerText = `${currentQIdx + 1} / ${currentData.questions.length}`;
+        const nextBtn = document.getElementById('next-btn');
+        nextBtn.innerText = (currentQIdx === currentData.questions.length - 1) ? "完成" : "下一题";
+    }
+</script>
 </body>
 </html>
