@@ -12,7 +12,7 @@ import urllib.parse
 WEB_PAGE_URL = "https://liuxuisme.github.io/daily-soft-exam/" 
 # =========================================
 
-# 🏛️ 架构师专用大纲 (保持不变，覆盖全考点)
+# 🏛️ 架构师专用大纲
 SYLLABUS = {
     2: [
         "操作系统(PV/死锁/嵌入式OS)", 
@@ -46,9 +46,10 @@ def get_ai_content(topic):
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key: return None
 
+    # 使用 Gemini 2.5 Flash
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
     
-    # 📝 优化 Prompt：明确禁止 LaTeX 单反斜杠，防止 JSON 炸裂
+    # 📝 Prompt
     prompt_text = f"""
     你是一位**软考系统架构设计师（高级）金牌培训讲师**。
     今天是备考冲刺日，主题是【{topic}】。
@@ -92,27 +93,19 @@ def get_ai_content(topic):
         result = resp.json()
         text = result['candidates'][0]['content']['parts'][0]['text'].strip()
         
-        # --- 🧹 数据清洗区 (核心修复) ---
-        # 1. 去除 Markdown 代码块标记
+        # --- 🧹 数据清洗区 ---
         text = text.replace("```json", "").replace("```", "").strip()
         
-        # 2. 正则修复：将所有“不合法的反斜杠”替换为“双反斜杠”
-        # 逻辑：查找所有并不是紧跟在 " \ / b f n r t u 这里的反斜杠
-        # 这样可以保留 \n \t \" 等合法转义，修复 \s \a \l 等非法转义
+        # 正则修复：自动修复非法转义字符
         try:
             return json.loads(text)
         except json.decoder.JSONDecodeError:
             print("⚠️ 检测到 JSON 格式非法，尝试自动修复 LaTeX 反斜杠...")
-            # 这是一个强力修复正则：把所有 \ 变成 \\ (除了已经是转义符的)
-            # 但简单点，我们直接把单个 \ 替换为 / 或者直接双写，这里用保守策略：
-            # 替换掉所有导致报错的单斜杠
             text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
             return json.loads(text)
 
     except Exception as e:
-        print(f"❌ 解析出错 (原始内容可能包含非法字符): {e}")
-        # 打印出前100个字符方便调试
-        if 'text' in locals(): print(f"Raw text start: {text[:100]}...")
+        print(f"❌ 解析出错: {e}")
         return None
 
 def save_to_file(data):
@@ -135,19 +128,13 @@ def send_dingtalk(date_str, data):
     current_year = today.year
     exam_date = datetime.datetime(current_year, 5, 24)
     
-    # 计算天数差
     delta = exam_date - today
-    days_left = delta.days + 1 # +1 包含今天
-    
-    # 如果已经过了考试日期（比如现在是6月），显示0或明年的倒计时
+    days_left = delta.days + 1 
     if days_left < 0: days_left = 0
 
     # --- 2. 构建纯净版文案 ---
-    # 这里的 title 是通知栏（弹窗）显示的标题
     msg_title = f"距离软考还有 {days_left} 天"
 
-    # Markdown 正文
-    # 我们保留了 {data['topic']}，否则你只看倒计时不知道今天学啥
     text = f"""### ⏳ {msg_title}
 
 **今日特训：{data['topic']}**
@@ -168,7 +155,15 @@ def send_dingtalk(date_str, data):
         }
     }
     requests.post(webhook, json=payload)
+
+# ✅ 这里就是你刚才报错缺失的部分
+if __name__ == "__main__":
+    topic = get_today_topic()
+    data = get_ai_content(topic)
+    
+    if data:
         date_str = save_to_file(data)
         send_dingtalk(date_str, data)
     else:
+        print("❌ 任务失败：无法获取内容")
         exit(1)
