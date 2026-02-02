@@ -65,7 +65,7 @@ def get_ai_content(topic):
     {{
         "topic": "{topic}",
         "core_concept": "核心考点提炼（Markdown）。列出3-5个考点。",
-        "knowledge_explanation": "深度精讲（Markdown）。包含原理、**记忆口诀**或对比表格。如果涉及数学公式，请用通俗易懂的文本描述。",
+        "knowledge_explanation": "深度精讲（Markdown）。包含原理、**知识点通俗易懂理解**或对比表格。如果涉及数学公式，请用通俗易懂的文本描述。",
         "essay_guide": "论文与案例指导（Markdown）。",
         "questions": [
             {{
