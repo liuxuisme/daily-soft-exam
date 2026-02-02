@@ -37,7 +37,7 @@ def get_ai_content(topic):
         return None
 
     # 使用 Gemini 2.0 Flash (它支持长文本和复杂 JSON)
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-3.0-flash:generateContent?key={api_key}"
     
     # 📝 核心 Prompt：要求生成知识点 + 10道题
     prompt_text = f"""
