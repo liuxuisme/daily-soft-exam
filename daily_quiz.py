@@ -120,7 +120,7 @@ def get_ai_content(topic):
     if not api_key: return None
 
     # 使用 Gemini 2.0 Flash
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
     
     prompt_text = f"""
     你是一位**软考系统架构设计师（高级）阅卷专家**。
