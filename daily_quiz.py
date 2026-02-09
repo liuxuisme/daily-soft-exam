@@ -185,15 +185,23 @@ def save_to_file(data):
     return date_str
 
 def send_dingtalk(date_str, data):
-    webhook = os.environ.get("DINGTALK_WEBHOOK")
-    if not webhook: return
+    # 获取环境变量
+    webhook_env = os.environ.get("DINGTALK_WEBHOOK")
+    if not webhook_env: return
+
+    # 🛠️ 核心修改：支持多个 Webhook (用逗号分隔)
+    # 逻辑：先按逗号切分，再去除首尾空格，过滤掉空字符串
+    webhooks = [w.strip() for w in webhook_env.split(',') if w.strip()]
 
     full_url = f"{WEB_PAGE_URL}/index.html?date={date_str}"
-    
+    print(f"🔗 生成链接: {full_url}")
+
     # 计算倒计时
     today = datetime.datetime.now()
-    exam_date = datetime.datetime(today.year, 5, 24)
-    days_left = (exam_date - today).days + 1
+    current_year = today.year
+    exam_date = datetime.datetime(current_year, 5, 24)
+    delta = exam_date - today
+    days_left = delta.days + 1 
     if days_left < 0: days_left = 0
 
     msg_title = f"距离软考还有 {days_left} 天"
@@ -207,14 +215,29 @@ def send_dingtalk(date_str, data):
 2. 完成 10 道精选真题
 
 ---
-👇 点击开始今日学习打开 [👉 进入特训系统]({full_url})
+👇 点击开始今日学习打卡 [👉 进入特训系统]({full_url})
 """
     
     payload = {
         "msgtype": "markdown",
-        "markdown": { "title": msg_title, "text": text }
+        "markdown": { 
+            "title": msg_title, 
+            "text": text 
+        }
     }
-    requests.post(webhook, json=payload)
+
+    # 🛠️ 核心修改：循环发送
+    print(f"📢 准备推送到 {len(webhooks)} 个群...")
+    
+    for i, webhook in enumerate(webhooks):
+        try:
+            resp = requests.post(webhook, json=payload, timeout=10)
+            if resp.status_code == 200:
+                print(f"✅ 第 {i+1} 个群发送成功")
+            else:
+                print(f"❌ 第 {i+1} 个群发送失败: {resp.text}")
+        except Exception as e:
+            print(f"❌ 第 {i+1} 个群请求报错: {e}")
 
 if __name__ == "__main__":
     # 1. 获取智能调度的考点
