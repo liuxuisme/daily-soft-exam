@@ -119,25 +119,28 @@ def get_ai_content(topic):
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key: return None
 
-    # 使用 Gemini 2.0 Flash
+    # 使用 Gemini 2.5 Flash
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
     
+    # 📝 Prompt
     prompt_text = f"""
-    你是一位**软考系统架构设计师（高级）阅卷专家**。
-    今天是备考冲刺日，具体细分考点是【{topic}】。
+    你是一位**软考系统架构设计师（高级）金牌培训讲师**。
+    今天是备考冲刺日，主题是【{topic}】。
     
-    请严格基于**历年真题（2015-2025）**，生成全方位学习数据。
+    请严格基于**历年真题（2015-2025）**，生成一份包含"学、记、练"的全方位学习数据。
     
     【重要格式要求】：
     1. 返回纯 JSON 格式。
-    2. **严禁在字符串中使用未转义的 LaTeX 反斜杠**。请使用纯文本符号或转义反斜杠 (\\sum)。
+    2. **严禁在字符串中使用未转义的 LaTeX 反斜杠（如 \sum, \alpha）**。请使用纯文本符号代替（如 sum, alpha），或者使用 markdown 代码块。
+    3. 如果必须包含公式，请确保反斜杠被转义（例如写成 \\sum 而不是 \sum）。
+    4. 所有的换行请使用 \\n，不要直接换行。
     
     JSON 结构如下：
     {{
         "topic": "{topic}",
-        "core_concept": "核心考点提炼（Markdown）。列出3个关键概念或公式。",
-        "knowledge_explanation": "深度精讲（Markdown）。**必须包含针对该具体考点的原理讲解**。如果可能，请提供一个'对比表格'或'记忆口诀'。",
-        "essay_guide": "论文与案例指导（Markdown）。如果该考点常出现在下午题，请说明解题思路；如果只考上午题，请注明'侧重选择题考察'。",
+        "core_concept": "核心考点提炼（Markdown）。列出3-5个考点。",
+        "knowledge_explanation": "深度精讲（Markdown）。包含原理、**记忆口诀**或对比表格。如果涉及数学公式，请用通俗易懂的文本描述。",
+        "essay_guide": "论文与案例指导（Markdown）。",
         "questions": [
             {{
                 "question": "题干 [年份]",
@@ -154,8 +157,8 @@ def get_ai_content(topic):
     headers = {'Content-Type': 'application/json'}
 
     try:
-        print(f"🚀 正在调用 AI 生成内容...")
-        resp = requests.post(url, headers=headers, json=payload, timeout=120)
+        print(f"🚀 [架构师备战] 正在生成【{topic}】的全套资料(10题+精讲)...")
+        resp = requests.post(url, headers=headers, json=payload, timeout=90)
         
         if resp.status_code != 200:
             print(f"❌ AI 请求失败: {resp.text}")
@@ -163,17 +166,30 @@ def get_ai_content(topic):
             
         result = resp.json()
         text = result['candidates'][0]['content']['parts'][0]['text'].strip()
+        
+        # --- 🧹 数据清洗区 ---
         text = text.replace("```json", "").replace("```", "").strip()
         
+        # 🛠️ 三级容错解析机制
         try:
-            return json.loads(text)
+            # 1. 尝试：开启 strict=False (允许控制字符，解决 Invalid control character)
+            return json.loads(text, strict=False)
         except json.decoder.JSONDecodeError:
-            print("⚠️ JSON 格式修复中...")
+            print("⚠️ 初次解析失败，尝试修复 LaTeX 反斜杠...")
+            
+            # 2. 修复：正则处理非法反斜杠
             text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
-            return json.loads(text)
+            
+            try:
+                # 再次尝试解析
+                return json.loads(text, strict=False)
+            except json.decoder.JSONDecodeError as e:
+                print(f"❌ JSON 修复失败: {e}")
+                # 打印出错位置的前后文本，方便调试（虽然Action里看不了太细）
+                return None
 
     except Exception as e:
-        print(f"❌ 解析出错: {e}")
+        print(f"❌ 未知错误: {e}")
         return None
 
 def save_to_file(data):
