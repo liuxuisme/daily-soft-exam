@@ -1,0 +1,35 @@
+name: Soft Exam Daily Link Push
+
+on:
+  schedule:
+    # Daily at 08:30 China Standard Time (UTC+8) => 00:30 UTC
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview only, do not send message"
+        required: false
+        default: "false"
+
+jobs:
+  push-daily-link:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Push Daily Link to DingTalk
+        env:
+          DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+          DAILY_PRACTICE_URL: ${{ vars.DAILY_PRACTICE_URL }}
+          EXAM_DATE: ${{ vars.EXAM_DATE }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: python daily_link_push.py
