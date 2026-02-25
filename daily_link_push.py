@@ -9,6 +9,7 @@ import requests
 DEFAULT_DAILY_URL = "https://ruankaodaren.com/exam/#/answertest/answertest?reset=0&type=8"
 DEFAULT_EXAM_MONTH = 5
 DEFAULT_EXAM_DAY = 24
+DEFAULT_MESSAGE_STYLE = "action_card"
 
 
 def parse_webhooks(raw: str) -> List[str]:
@@ -37,6 +38,45 @@ def build_markdown_text(days_left: int, daily_url: str) -> str:
 """
 
 
+def build_payload(days_left: int, daily_url: str, message_style: str) -> dict:
+    title = f"距离软考还有 {days_left} 天"
+
+    if message_style == "markdown":
+        return {
+            "msgtype": "markdown",
+            "markdown": {
+                "title": title,
+                "text": build_markdown_text(days_left, daily_url),
+            },
+        }
+
+    if message_style == "link":
+        return {
+            "msgtype": "link",
+            "link": {
+                "title": title,
+                "text": "今日任务：每日一练（真题来源站点）",
+                "picUrl": "",
+                "messageUrl": daily_url,
+            },
+        }
+
+    # Default and recommended: action card with a dedicated jump button.
+    return {
+        "msgtype": "actionCard",
+        "actionCard": {
+            "title": title,
+            "text": (
+                f"### ⏳ {title}\n\n"
+                "**今日任务：每日一练（真题来源站点）**\n\n"
+                "> 点击下方按钮开始今日学习打卡"
+            ),
+            "singleTitle": "👉 进入每日一练",
+            "singleURL": daily_url,
+        },
+    }
+
+
 def send_to_dingtalk(webhooks: List[str], payload: dict) -> int:
     ok_count = 0
     for idx, webhook in enumerate(webhooks):
@@ -57,28 +97,24 @@ def main() -> int:
     webhooks = parse_webhooks(webhook_env) if webhook_env else []
 
     daily_url = os.getenv("DAILY_PRACTICE_URL", DEFAULT_DAILY_URL).strip()
+    message_style = os.getenv("DINGTALK_MESSAGE_STYLE", DEFAULT_MESSAGE_STYLE).strip().lower()
     dry_run = os.getenv("DRY_RUN", "false").strip().lower() in {"1", "true", "yes"}
 
     today = datetime.date.today()
     exam_date = parse_exam_date(today)
     days_left = max((exam_date - today).days + 1, 0)
 
-    payload = {
-        "msgtype": "markdown",
-        "markdown": {
-            "title": f"距离软考还有 {days_left} 天",
-            "text": build_markdown_text(days_left, daily_url),
-        },
-    }
+    payload = build_payload(days_left, daily_url, message_style)
 
     print(f"📆 Today: {today.isoformat()}")
     print(f"🎯 Exam date: {exam_date.isoformat()}")
     print(f"🔗 Daily URL: {daily_url}")
+    print(f"💬 Message style: {message_style}")
     print(f"🧪 Dry-run: {dry_run}")
 
     if dry_run:
         print("📝 Payload preview:")
-        print(payload["markdown"]["text"])
+        print(payload)
         return 0
 
     if not webhooks:

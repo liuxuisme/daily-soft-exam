@@ -31,5 +31,6 @@ jobs:
           DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
           DAILY_PRACTICE_URL: ${{ vars.DAILY_PRACTICE_URL }}
           EXAM_DATE: ${{ vars.EXAM_DATE }}
+          DINGTALK_MESSAGE_STYLE: ${{ vars.DINGTALK_MESSAGE_STYLE }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: python daily_link_push.py
