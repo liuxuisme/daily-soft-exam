@@ -1,7 +1,6 @@
 {
   "month": 4,
   "pending": [
-    "大数据-批流一体(Lambda/Kappa)",
     "分布式-消息队列(Kafka/RabbitMQ)",
     "分布式-链路追踪与可观测性",
     "云原生-Serverless无服务器架构",
