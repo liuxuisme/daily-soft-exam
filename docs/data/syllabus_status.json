@@ -1,7 +1,6 @@
 {
   "month": 4,
   "pending": [
-    "安全架构-身份认证与单点登录(SSO/OAuth2)",
     "分布式-分布式锁与幂等设计",
     "数据治理-数据质量与主数据管理",
     "云原生-K8s核心对象(Pod/Deployment/Service)",
