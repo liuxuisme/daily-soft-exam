@@ -1,7 +1,6 @@
 {
   "month": 4,
   "pending": [
-    "数据治理-数据质量与主数据管理",
     "云原生-K8s核心对象(Pod/Deployment/Service)",
     "存储架构-DAS/NAS/SAN与对象存储",
     "高并发-数据库读写分离与分库分表",
