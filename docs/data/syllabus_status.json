@@ -1,7 +1,6 @@
 {
   "month": 4,
   "pending": [
-    "分布式-服务注册与发现",
     "安全架构-PKI体系与TLS",
     "大数据-Spark计算模型",
     "云原生-ServiceMesh服务网格",
